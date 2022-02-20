@@ -2,12 +2,13 @@ const { gql, GraphQLClient } =  require('graphql-request')
 
 const client = new GraphQLClient('https://api.thegraph.com/subgraphs/name/isesattelite/tune-trading')
 //todo
-const endBlockTimestamp = "123456"
+const startBlockNumber = 13717846
+const endBlockTimestamp = "1640995201" //block number: 13916166
 
 const mintHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $timestampCutoff: BigInt) {
-          mintRecords(first: $first, skip: $skip, where: { timestamp_lte: $timestampCutoff }, orderBy: timestamp, orderDirection: asc) {
+      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          mintRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               sender
               amount0
@@ -72,7 +73,8 @@ async function executeQuery(query, pageNumber = 0, pageSize = 10) {
 	const data = await client.request(query.builder, {
 		first: pageSize,
 		skip: pageNumber * pageSize,
-		timestampCutoff: endBlockTimestamp,
+		endBlockTimestamp,
+		startBlockNumber,
 	})
 	const result = data[query.field]
 	console.log({ result })
