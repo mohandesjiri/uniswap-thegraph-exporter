@@ -3,7 +3,7 @@ const { gql, GraphQLClient } =  require('graphql-request')
 const client = new GraphQLClient('https://api.thegraph.com/subgraphs/name/isesattelite/tune-trading')
 //todo
 const startBlockNumber = 13717846
-const endBlockTimestamp = "1640995201" //block number: 13916166
+const endBlockTimestamp = "1643673540" //block number: 13916166
 
 const mintHistoryQuery = {
 	builder: gql`
@@ -69,7 +69,7 @@ const reserveHistoryQuery = {
 	field: 'reseveRecords'
 }
 
-async function executeQuery(query, pageNumber = 0, pageSize = 10) {
+async function executeQuery(query, pageNumber = 0, pageSize = 1000) {
 	const data = await client.request(query.builder, {
 		first: pageSize,
 		skip: pageNumber * pageSize,
@@ -81,5 +81,14 @@ async function executeQuery(query, pageNumber = 0, pageSize = 10) {
 	return result
 }
 
-executeQuery(burnHistoryQuery);
+async function loop() {
+	let output = 1;
+	let page = 0;
+	while (output) {
+		output = await executeQuery(swapHistoryQuery, page);
+		page++;
+	}
+}
+
+loop();
 
