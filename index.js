@@ -22,8 +22,8 @@ const mintHistoryQuery = {
 
 const burnHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $timestampCutoff: BigInt) {
-          burnRecords(first: $first, skip: $skip, where: { timestamp_lte: $timestampCutoff }, orderBy: timestamp, orderDirection: asc) {
+      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          burnRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               sender
               amount0
@@ -39,8 +39,8 @@ const burnHistoryQuery = {
 
 const swapHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $timestampCutoff: BigInt) {
-          swapRecords(first: $first, skip: $skip, where: { timestamp_lte: $timestampCutoff }, orderBy: timestamp, orderDirection: asc) {
+      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          swapRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               sender
               amount0In
@@ -57,8 +57,8 @@ const swapHistoryQuery = {
 
 const reserveHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $timestampCutoff: BigInt) {
-          reseveRecords(first: $first, skip: $skip, where: { timestamp_lte: $timestampCutoff }, orderBy: timestamp, orderDirection: asc) {
+      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          reseveRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               reserve0
               reserve1
@@ -81,5 +81,5 @@ async function executeQuery(query, pageNumber = 0, pageSize = 10) {
 	return result
 }
 
-executeQuery(reserveHistoryQuery);
+executeQuery(burnHistoryQuery);
 
