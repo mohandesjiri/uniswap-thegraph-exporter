@@ -3,12 +3,13 @@ const { gql, GraphQLClient } =  require('graphql-request')
 const client = new GraphQLClient('https://api.thegraph.com/subgraphs/name/isesattelite/tune-trading')
 //todo
 const startBlockNumber = 13717846
-const endBlockTimestamp = "1643673540" //block number: 13916166
+const firstBlockTimestamp= 1638316799
+const finalBlockTimestamp = 1640995201 //block number: 13916166
 
 const mintHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
-          mintRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
+      query ($endBlockTimestamp: BigInt, $startBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          mintRecords(block: {  number_gte: $startBlockNumber}, where: { timestamp_gt: $startBlockTimestamp, timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               sender
               amount0
@@ -22,8 +23,8 @@ const mintHistoryQuery = {
 
 const burnHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
-          burnRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
+      query ($endBlockTimestamp: BigInt, $startBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          burnRecords(block: {  number_gte: $startBlockNumber}, where: { timestamp_gt: $startBlockTimestamp, timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               sender
               amount0
@@ -39,8 +40,8 @@ const burnHistoryQuery = {
 
 const swapHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
-          swapRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
+      query ($endBlockTimestamp: BigInt, $startBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          swapRecords(block: {  number_gte: $startBlockNumber}, where: { timestamp_gt: $startBlockTimestamp, timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               sender
               amount0In
@@ -57,8 +58,8 @@ const swapHistoryQuery = {
 
 const reserveHistoryQuery = {
 	builder: gql`
-      query ($first: Int, $skip: Int, $endBlockTimestamp: BigInt, $startBlockNumber: Int) {
-          reseveRecords(first: $first, skip: $skip, block: {  number_gte: $startBlockNumber}, where: { timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
+      query ($endBlockTimestamp: BigInt, $startBlockTimestamp: BigInt, $startBlockNumber: Int) {
+          reseveRecords(block: {  number_gte: $startBlockNumber}, where: { timestamp_gt: $startBlockTimestamp, timestamp_lte: $endBlockTimestamp }, orderBy: timestamp, orderDirection: asc) {
               id
               reserve0
               reserve1
@@ -69,11 +70,16 @@ const reserveHistoryQuery = {
 	field: 'reseveRecords'
 }
 
-async function executeQuery(query, pageNumber = 0, pageSize = 1000) {
+async function executeQuery(query, startBlockTimestamp, endBlockTimestamp) {
+	if(Number(startBlockTimestamp) > finalBlockTimestamp) {
+		return []
+	}
+	if(Number(endBlockTimestamp) < firstBlockTimestamp) {
+		return []
+	}
 	const data = await client.request(query.builder, {
-		first: pageSize,
-		skip: pageNumber * pageSize,
-		endBlockTimestamp,
+		startBlockTimestamp: String(Math.max(Number(startBlockTimestamp), firstBlockTimestamp)),
+		endBlockTimestamp: String(Math.min(Number(endBlockTimestamp), finalBlockTimestamp)),
 		startBlockNumber,
 	})
 	const result = data[query.field]
@@ -81,12 +87,17 @@ async function executeQuery(query, pageNumber = 0, pageSize = 1000) {
 	return result
 }
 
+const period = 3600 * 12
 async function loop() {
-	let output = 1;
-	let page = 0;
-	while (output) {
-		output = await executeQuery(swapHistoryQuery, page);
-		page++;
+	let output = [1];
+	let startTime = firstBlockTimestamp
+	let endTime = startTime + period
+	while (output.length > 0) {
+		output = await executeQuery(swapHistoryQuery, startTime, endTime);
+		console.log('=====================================')
+		console.log(output)
+		startTime = endTime
+		endTime += period
 	}
 }
 
