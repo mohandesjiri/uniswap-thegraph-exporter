@@ -1,6 +1,6 @@
 const { gql, GraphQLClient } =  require('graphql-request')
 
-const client = new GraphQLClient('https://api.thegraph.com/subgraphs/name/mohandesjiri/jiri-uniswap-analysis')
+const client = new GraphQLClient('https://api.thegraph.com/subgraphs/name/isesattelite/tune-trading')
 //todo
 const endBlockTimestamp = "123456"
 
